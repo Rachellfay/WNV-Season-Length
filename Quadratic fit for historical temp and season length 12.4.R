@@ -11,35 +11,35 @@ library(lubridate)
 # Set working directory #
 setwd("~/Desktop/rachelWNV")
 
-# 1. Read data #
+# Read data #
 season_data <- read_excel("wnv_transmission_season_averages_lm_test_new.xlsx")
 temp_data   <- read_excel("avg_temperature_by_county_1979_1998_singlepoint.xlsx")
 
-# 2. Select required columns #
+# Select required columns #
 season_df <- season_data %>%
   select(district, change_in_length)
 
 temp_df <- temp_data %>%
   select(district, avg_temp_1979_1998)
 
-# 3. Standardize district names for merging #
+# Standardize district names for merging #
 season_df <- season_df %>%
   mutate(district = tolower(trimws(district)))
 
 temp_df <- temp_df %>%
   mutate(district = tolower(trimws(district)))
 
-# 4. Merge datasets #
+# Merge datasets #
 merged_data <- inner_join(season_df, temp_df, by = "district") %>%
   mutate(district_label = str_to_title(district),
          mean_temperature = avg_temp_1979_1998,  # rename for consistency
          temp_squared = mean_temperature^2)      # quadratic term
 
-# 5. Fit quadratic model #
+# Fit quadratic model #
 model <- lm(change_in_length ~ mean_temperature + temp_squared, data = merged_data)
 summary(model)
 
-# 6. Plot with quadratic curve + repelled labels #
+# Plot with quadratic curve + repelled labels #
 ggplot(merged_data, aes(x = mean_temperature, y = change_in_length)) +
   
   geom_point(size = 2, color = "black") +
