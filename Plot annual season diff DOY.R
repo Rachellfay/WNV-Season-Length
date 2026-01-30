@@ -8,7 +8,7 @@ library(dplyr)
 library(writexl)
 library(openxlsx) 
 
-#### calculate statewide average season length ###########
+#### calculate statewide average season length ####
 
 # Read your data (replace with your filename)
 df <- read_xlsx("wnv_transmission_season_1999_2024_12.1.25.xlsx")
@@ -26,7 +26,7 @@ df <- df %>%
 df <- df %>%
   mutate(DaysBetween = LastValid - FirstValid)
 
-# ---- Calculate annual average season length across all districts ----
+# Calculate annual average season length across all districts #
 annual_avg <- df %>%
   group_by(year) %>%
   summarise(
@@ -41,7 +41,7 @@ annual_avg
 write.xlsx(annual_avg,'season_average_length_statewide_12.1.25.xlsx', rowNames = FALSE)
 #### calculate statewide average season length
 
-#################### Show difference across annual average season length ####
+####Show difference across annual average season length ####
 
 # Read your data
 df <- read_xlsx("wnv_transmission_season_1999_2024_12.1.25.xlsx")
@@ -59,7 +59,7 @@ df <- df %>%
 df <- df %>%
   mutate(DaysBetween = LastValid - FirstValid)
 
-# ---- Calculate annual averages across all districts ----
+# Calculate annual averages across all districts #
 annual_avg <- df %>%
   group_by(year) %>%
   summarise(
@@ -80,9 +80,8 @@ write.xlsx(annual_avg,
 
 
 ######## make fig 1A ##########
-###-----------------------------------------------------------
-### 1. Load data
-###-----------------------------------------------------------
+### Load data ###
+
 
 data <- read_excel("season_average_length_statewide_12.1.25.xlsx")
 
@@ -90,9 +89,8 @@ data <- read_excel("season_average_length_statewide_12.1.25.xlsx")
 ref_start <- data$avg_first_day[data$year == 1999]  # 125
 ref_end   <- data$avg_last_day[data$year == 1999]   # 272
 
-###-----------------------------------------------------------
-### 2. Compute anomalies
-###-----------------------------------------------------------
+### Compute anomalies ###
+
 
 data <- data %>%
   mutate(
@@ -106,10 +104,7 @@ write_xlsx(data, "statewide_avg_season_length_diff_12.1.xlsx")
 data <- read_excel("statewide_avg_season_length_diff_12.1.xlsx")
 data$year <- factor(data$year)
 
-###-----------------------------------------------------------
-### 3. Build shading coordinates
-###-----------------------------------------------------------
-
+### Build shading coordinates ###
 
 data <- data %>%
   mutate(
@@ -122,55 +117,43 @@ data <- data %>%
     end_xmax   = pmax(avg_last_day, ref_end)
   )
 
-###-----------------------------------------------------------
-### 4. Fix row order for stable y-axis alignment
-###-----------------------------------------------------------
+### Fix row order for stable y-axis alignment ###
 
 data$ypos <- seq_len(nrow(data))
 
-###-----------------------------------------------------------
-### 5. Month labels
-###-----------------------------------------------------------
+### Month labels ###
 
 month_start_days <- c(1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335)
 month_names <- month.name
 
-###-----------------------------------------------------------
-### 6. PLOT
-###-----------------------------------------------------------
+### Plot ###
 
 ggplot(data) +
   
-  # -----------------------------------------------------------
-# GRAY REFERENCE SEASON (same baseline for every row)
-# -----------------------------------------------------------
+ 
+# GRAY REFERENCE SEASON (same baseline for every row) #
 geom_segment(
   aes(x = ref_start, xend = ref_end, 
       y = ypos, yend = ypos),
   linewidth = 5, color = "gray80"
 ) +
   
-  # -----------------------------------------------------------
-# PURPLE — start anomalies
-# -----------------------------------------------------------
+# PURPLE — start anomalies #
+
 geom_rect(
   aes(xmin = start_xmin, xmax = start_xmax,
       ymin = ypos - 0.3, ymax = ypos + 0.3),
   fill = "purple3", alpha = 0.5
 ) +
   
-  # -----------------------------------------------------------
-# GREEN — end anomalies
-# -----------------------------------------------------------
+# GREEN — end anomalies #
 geom_rect(
   aes(xmin = end_xmin, xmax = end_xmax,
       ymin = ypos - 0.3, ymax = ypos + 0.3),
   fill = "darkgreen", alpha = 0.5
 ) +
   
-  # -----------------------------------------------------------
-# BLACK — Actual average season line for each year
-# -----------------------------------------------------------
+# BLACK — Actual average season line for each year #
 geom_segment(
   aes(
     x = avg_first_day,
