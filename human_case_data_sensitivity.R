@@ -10,7 +10,7 @@ df_orig <- read_excel("case_data_loop/Human WNV cases 7.30.25.xlsx") %>%
   mutate(
     date = mdy(`week start date`),
     
-    # Extract year and DOY (day-of-year)
+    # Extract year and DOY (day-of-year) #
     year = year(date)
   ) %>%
   arrange(year, doy) %>%
@@ -23,10 +23,10 @@ Season_Length_Days <- read_excel("case_data_loop/Season length Days.xlsx") |>
     season_length = `Season length (Days)`
   )
 
-# Vector of all 25 years in the data
+# Vector of all 25 years in the data #
 all_years <- tibble(year = sort(unique(df_orig$year)))
 
-# Initialize results table
+# Initialize results table #
 reg_results <- data.frame(
   n_days = integer(),
   type = character(),  # "first" or "last"
@@ -54,7 +54,7 @@ for (n_days in 10:20) {
   
   df_within_n <- df_flagged %>% filter(within_n_days)
   
-  ## First date per year
+  ## First date per year ##
   first_dates <- df_within_n %>%
     group_by(year) %>%
     filter(doy == min(doy)) %>%
@@ -62,7 +62,7 @@ for (n_days in 10:20) {
     ungroup() %>%
     select(year, first_day)
   
-  ## Last date per year
+  ## Last date per year ##
   last_dates <- df_within_n %>%
     group_by(year) %>%
     filter(doy == max(doy)) %>%
@@ -70,7 +70,7 @@ for (n_days in 10:20) {
     ungroup() %>%
     select(year, last_day)
   
-  # Merge with full year list and season length
+  # Merge with full year list and season length #
   first_dates_full <- all_years %>%
     left_join(first_dates, by = "year") %>%
     left_join(Season_Length_Days, by = "year") %>%
@@ -81,7 +81,7 @@ for (n_days in 10:20) {
     left_join(Season_Length_Days, by = "year") %>%
     select(year, last_day, season_length)
   
-  ## --- FIRST DATE REGRESSION ---
+  ## FIRST DATE REGRESSION ##
   if (nrow(first_dates_full) == 25 && all(!is.na(first_dates_full$first_day)) && all(!is.na(first_dates_full$season_length))) {
     fit_first <- lm(first_day ~ season_length, data = first_dates_full)
     summary_first <- summary(fit_first)
@@ -103,7 +103,7 @@ for (n_days in 10:20) {
         "  P-value:", signif(summary_first$coefficients[2, 4], 3), "\n\n")
   }
   
-  ## --- LAST DATE REGRESSION ---
+  ## LAST DATE REGRESSION ##
   if (nrow(last_dates_full) == 25 && all(!is.na(last_dates_full$last_day)) && all(!is.na(last_dates_full$season_length))) {
     fit_last <- lm(last_day ~ season_length, data = last_dates_full)
     summary_last <- summary(fit_last)
@@ -125,12 +125,12 @@ for (n_days in 10:20) {
         "  P-value:", signif(summary_last$coefficients[2, 4], 3), "\n\n")
   }
   
-  ## Save output tables
+  ## Save output tables ##
   write_xlsx(first_dates_full, paste0("case_data_loop/final_df/first_dates_within_", n_days, "_doy.xlsx"))
   write_xlsx(last_dates_full, paste0("case_data_loop/final_df/last_dates_within_", n_days, "_doy.xlsx"))
 }
 
-# Save all regression summaries
+# Save all regression summaries #
 write.csv(reg_results, "case_data_loop/final_df/first_last_regression_results.csv", row.names = FALSE)
 
 reg_results_first <- reg_results |> filter(type == 'first')
